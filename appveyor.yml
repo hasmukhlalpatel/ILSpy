@@ -6,6 +6,9 @@ configuration:
 
 image: Visual Studio 2019
 
+init:
+- git config --global core.autocrlf true
+
 install:
 - git submodule update --init --recursive
 - pwsh .\BuildTools\appveyor-install.ps1
@@ -16,6 +19,7 @@ nuget:
   project_feed: true
   disable_publish_on_pr: true
 
+
 before_build:
 - nuget restore ILSpy.sln
 
@@ -25,12 +29,17 @@ build_script:
 after_build:
 - 7z a ILSpy_binaries.zip %APPVEYOR_BUILD_FOLDER%\ILSpy\bin\%configuration%\net472\*.dll %APPVEYOR_BUILD_FOLDER%\ILSpy\bin\%configuration%\net472\*.exe %APPVEYOR_BUILD_FOLDER%\ILSpy\bin\%configuration%\net472\*.config %APPVEYOR_BUILD_FOLDER%\ILSpy\bin\%configuration%\net472\*\ILSpy.resources.dll %APPVEYOR_BUILD_FOLDER%\ILSpy\bin\%configuration%\net472\*\ILSpy.ReadyToRun.Plugin.resources.dll
 
-test_script:
-- vstest.console.exe /logger:Appveyor /Parallel "ICSharpCode.Decompiler.Tests\bin\%configuration%\net472\ICSharpCode.Decompiler.Tests.exe" "ILSpy.Tests\bin\%configuration%\net472\ILSpy.Tests.exe" "ILSpy.BamlDecompiler.Tests\bin\%configuration%\net472\ILSpy.BamlDecompiler.Tests.exe"
+test: off
 
-after_test:
-- python BuildTools\tidy.py
-- .\BuildTools\dotnet-format --check --verbosity diagnostic ILSpy.sln
+#test_script:
+#- vstest.console.exe /logger:Appveyor /Parallel "ICSharpCode.Decompiler.Tests\bin\%configuration%\net472\ICSharpCode.Decompiler.Tests.exe" "ILSpy.Tests\bin\%configuration%\net472\ILSpy.Tests.exe" "ILSpy.BamlDecompiler.Tests\bin\%configuration%\net472\ILSpy.BamlDecompiler.Tests.exe"
+
+#after_test:
+#- python BuildTools\tidy.py
+#- .\BuildTools\dotnet-format --check --verbosity diagnostic ILSpy.sln
+
+on_finish:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 for:
 - branches:
